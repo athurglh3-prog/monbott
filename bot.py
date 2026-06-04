@@ -55,6 +55,7 @@ async def boutons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("⬅️ Retour", callback_data="retour")]
             ])
         )
+
     elif query.data == "classic":
 
         await query.edit_message_text(
@@ -85,9 +86,9 @@ async def boutons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ])
         )
 
-  # PAYMENTS
+    # PAYMENTS
     elif query.data in ["pay_classic", "pay_gold", "pay_premium"]:
-            
+
         prix = {
             "pay_classic": 40,
             "pay_gold": 100,
@@ -99,9 +100,9 @@ async def boutons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "pay_gold": "CC Gold",
             "pay_premium": "CC Premium"
         }
-                
+
         solde = soldes.get(user_id, 0)
-              
+
         if solde >= prix[query.data]:
 
             soldes[user_id] -= prix[query.data]
@@ -109,27 +110,28 @@ async def boutons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text(
                 f"🛍️ Merci pour votre achat ! 🛍️\n\n{nom[query.data]}"
             )
-                
+
         else:
-              
+
             await query.edit_message_text(
                 "❌ Solde insuffisant",
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("⬅️ Retour", callback_data="retour")]
                 ])
-            )   
-            
+            )
+
     # RETOUR
     elif query.data == "retour":
-         
+
         await query.edit_message_text(
             "🎉 Menu principal",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🛍️ Boutique", callback_data="boutique")],
-                [InlineKeyboardButton("💳 Déposer", callback_data="deposer")]
+                [InlineKeyboardButton("🛍️ Boutique", callback_data="boutique"),
+                 InlineKeyboardButton("💳 Déposer", callback_data="deposer")]
             ])
         )
-# DEPOT
+
+    # DEPOT
     elif query.data == "deposer":
 
         solde = soldes.get(user_id, 0)
@@ -144,10 +146,10 @@ async def boutons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("⬅️ Retour", callback_data="retour")]
             ])
         )
-                  
-    # METHODE DEPOT
+
+    # DEPOT STEP 2
     elif query.data.startswith("dep_"):
-    
+
         montant = query.data.split("_")[1]
 
         await query.edit_message_text(
@@ -158,14 +160,15 @@ async def boutons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("Bitcoin", callback_data=f"btc_{montant}")],
                 [InlineKeyboardButton("⬅️ Retour", callback_data="deposer")]
             ])
-        )  
-# 📩 DÉPÔT PAGE 3
+        )
+
+    # PAYPAL
     elif query.data.startswith("paypal_"):
 
         montant = query.data.split("_")[1]
 
         await query.edit_message_text(
-             text=(
+            text=(
                 f"💰 ENVOYEZ EXACTEMENT {montant}€\n\n"
                 "💳 Moyen de paiement : Paypal\n\n"
                 "📌 A RENTRER DANS PAYPAL : @ladallelacc \n\n"
@@ -175,11 +178,12 @@ async def boutons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("⬅️ Retour menu", callback_data="retour")]
             ])
         )
-              
+
+    # SOLANA
     elif query.data.startswith("solana_"):
-                
+
         montant = query.data.split("_")[1]
-         
+
         await query.edit_message_text(
             text=(
                 f"💰 ENVOYEZ EXACTEMENT {montant}€\n\n"
@@ -188,49 +192,49 @@ async def boutons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "📌 ADRESSE : HxhJXnKVTwjKn4bsMjH9JFJ5A65xSYgS59BbvnHRgq9e"
             ),
             reply_markup=InlineKeyboardMarkup([
-                 [InlineKeyboardButton("⬅️ Retour menu", callback_data="retour")]
-             ])
+                [InlineKeyboardButton("⬅️ Retour menu", callback_data="retour")]
+            ])
         )
-        
+
+    # BTC
     elif query.data.startswith("btc_"):
-         
+
         montant = query.data.split("_")[1]
 
         await query.edit_message_text(
             text=(
                 f"💰 ENVOYEZ EXACTEMENT {montant}€\n\n"
-
                 "💳 Moyen de paiement : Bitcoin\n\n"
-
-
-                "📸 Une fois payé, envoyez un screen ici."
-                "📌 ADRESSE 14BzJbDmHKgwW6qgnBcKRsyQtzD7idqyPF :\n"
-            ),   
+                "📸 Une fois payé, envoyez un screen ici.\n\n"
+                "📌 ADRESSE 14BzJbDmHKgwW6qgnBcKRsyQtzD7idqyPF"
+            ),
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("⬅️ Retour menu", callback_data="retour")]
-             ])
+            ])
         )
+
+
 # PHOTO
 async def photo_recue(update: Update, context: ContextTypes.DEFAULT_TYPE):
-                
+
     user_id = update.effective_user.id
-            
+
     if attente_screen.get(user_id):
-               
+
         attente_screen.pop(user_id, None)
 
         await update.message.reply_text(
             "📸 Merci pour ta commande !\nLe staff validera au plus vite ton solde."
         )
 
-        
+
 # BOT
 app = Application.builder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(boutons))
 app.add_handler(MessageHandler(filters.PHOTO, photo_recue))
-                
+
 print("Bot lancé...")
-              
+
 app.run_polling()
